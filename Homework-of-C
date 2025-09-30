@@ -1,0 +1,206 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+struct Student {
+    int id;
+    char name[20];
+    int age;
+    float score;
+};
+
+struct Student students[100];
+int count = 0;
+
+// 清除输入缓冲区残留字符（处理输入异常）
+void clearBuffer() {
+    while (getchar() != '\n');
+}
+
+// 添加学生（保留学号查重和输入校验）
+void addStudent() {
+    if (count >= 100) {
+        printf("容量已满，无法添加新学生！\n");
+        return;
+    }
+
+    int inputId, isDuplicate = 0;
+    printf("输入学号: ");
+    // 处理非数字输入
+    if (scanf_s("%d", &inputId) != 1) {
+        printf("学号输入错误，请输入数字！\n");
+        clearBuffer();
+        return;
+    }
+
+    // 检查学号重复
+    for (int i = 0; i < count; i++) {
+        if (students[i].id == inputId) {
+            printf("学号%d已存在，添加失败！\n", inputId);
+            isDuplicate = 1;
+            break;
+        }
+    }
+    if (isDuplicate) return;
+
+    students[count].id = inputId;
+
+    // 输入姓名（支持带空格）
+    printf("输入姓名: ");
+    clearBuffer();
+    fgets(students[count].name, sizeof(students[count].name), stdin);
+    students[count].name[strcspn(students[count].name, "\n")] = '\0';
+
+    // 输入年龄
+    printf("输入年龄: ");
+    if (scanf_s("%d", &students[count].age) != 1) {
+        printf("年龄输入错误，请输入数字！\n");
+        clearBuffer();
+        return;
+    }
+
+    // 输入成绩
+    printf("输入成绩: ");
+    if (scanf_s("%f", &students[count].score) != 1) {
+        printf("成绩输入错误，请输入数字！\n");
+        clearBuffer();
+        return;
+    }
+
+    count++;
+    printf("学号%d的学生添加成功！\n", inputId);
+}
+
+// 显示学生信息
+void showStudents() {
+    if (count == 0) {
+        printf("当前无学生记录，请先添加学生！\n");
+        return;
+    }
+
+    printf("====================学生信息列表====================\n");
+    printf("学号\t姓名\t\t年龄\t成绩\n");
+    printf("----------------------------------------------------\n");
+    for (int i = 0; i < count; i++) {
+        printf("%d\t%-12s%d\t%.1f\n",
+            students[i].id,
+            students[i].name,
+            students[i].age,
+            students[i].score);
+    }
+    printf("====================================================\n");
+}
+
+// 新增：修改学生信息
+void modifyStudent() {
+    if (count == 0) {
+        printf("当前无学生记录，无法修改！\n");
+        return;
+    }
+
+    int targetId, findIndex = -1;
+    printf("输入要修改的学生学号: ");
+    if (scanf_s("%d", &targetId) != 1) {
+        printf("学号输入错误，请输入数字！\n");
+        clearBuffer();
+        return;
+    }
+
+    // 查找目标学生
+    for (int i = 0; i < count; i++) {
+        if (students[i].id == targetId) {
+            findIndex = i;
+            break;
+        }
+    }
+
+    if (findIndex == -1) {
+        printf("未找到学号%d的学生记录！\n", targetId);
+        return;
+    }
+
+    // 显示原信息
+    printf("当前学号%d的信息：\n", targetId);
+    printf("姓名: %s  年龄: %d  成绩: %.1f\n",
+        students[findIndex].name,
+        students[findIndex].age,
+        students[findIndex].score);
+
+    // 输入新信息
+    printf("输入新姓名: ");
+    clearBuffer();
+    fgets(students[findIndex].name, sizeof(students[findIndex].name), stdin);
+    students[findIndex].name[strcspn(students[findIndex].name, "\n")] = '\0';
+
+    printf("输入新年龄: ");
+    if (scanf_s("%d", &students[findIndex].age) != 1) {
+        printf("年龄输入错误，修改失败！\n");
+        clearBuffer();
+        return;
+    }
+
+    printf("输入新成绩: ");
+    if (scanf_s("%f", &students[findIndex].score) != 1) {
+        printf("成绩输入错误，修改失败！\n");
+        clearBuffer();
+        return;
+    }
+
+    printf("学号%d的学生信息修改成功！\n", targetId);
+}
+
+// 新增：删除学生信息
+void deleteStudent() {
+    if (count == 0) {
+        printf("当前无学生记录，无法删除！\n");
+        return;
+    }
+
+    int targetId, findIndex = -1;
+    printf("输入要删除的学生学号: ");
+    if (scanf_s("%d", &targetId) != 1) {
+        printf("学号输入错误，请输入数字！\n");
+        clearBuffer();
+        return;
+    }
+
+    // 查找目标学生
+    for (int i = 0; i < count; i++) {
+        if (students[i].id == targetId) {
+            findIndex = i;
+            break;
+        }
+    }
+
+    if (findIndex == -1) {
+        printf("未找到学号%d的学生记录！\n", targetId);
+        return;
+    }
+
+    // 后续学生向前移动，覆盖被删除记录
+    for (int i = findIndex; i < count - 1; i++) {
+        students[i] = students[i + 1];
+    }
+
+    count--;
+    printf("学号%d的学生记录删除成功！\n", targetId);
+}
+
+int main() {
+    int choice;
+    printf("===================学生管理系统===================\n");
+    printf("说明：数据仅在程序运行时保留，关闭后会清除\n");
+    printf("==================================================\n");
+
+    while (1) {
+        printf("\n请选择功能（0-4）：\n");
+        printf("1.添加学生  2.显示学生  3.修改学生  4.删除学生  0.退出系统\n");
+        printf("你的选择: ");
+
+        // 处理菜单非法输入
+        if (scanf_s("%d", &choice) != 1) {
+            printf("输入错误，请输入0-4之间的数字!\n");
+        }
+    }
+    return 0;
+}
